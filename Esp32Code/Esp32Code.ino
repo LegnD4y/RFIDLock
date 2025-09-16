@@ -1,92 +1,126 @@
 #include <SoftwareSerial.h>
+#include <WebSocketsClient.h> // WebSocketsClient, webSocket.begin()
 #include <SPI.h>
 #include <SD.h>
+#include <WiFi.h>
+#include <LiquidCrystal.h>
 
-#define CS 5
-#define rele 13
+LiquidCrystal lcd(19, 23, 18, 17, 16, 15);
 
-SoftwareSerial RFID(17, 16);
+// #define CS 5
+// #define rele 13
 
-void openValve()
-{
-  digitalWrite(rele, HIGH);
-  delay(1000);
+// SoftwareSerial RFID(17, 16);
 
-  digitalWrite(rele, LOW);
-}
+const char* ssid = "IFMS"; // your ssid
+#define EAP_ID "caec.tl"
+#define EAP_USERNAME "caec.tl"
+#define EAP_PASSWORD "kF6P8ZnM"
 
-void RegisterID(const char *path, const char *id)
-{
-  File file = SD.open(path, FILE_WRITE);
+// void openValve()
+// {
+//   digitalWrite(rele, HIGH);
+//   delay(1000);
 
-  if(file)
-  {
-    file.println(id);
-    file.close();
-    Serial.printf("Registered ID: ", id);
-  } 
-  else
-  {
-    Serial.println("Error opening file %s", path);
-  }
-}
+//   digitalWrite(rele, LOW);
+// }
 
-bool VerifyIDs(const char *path, const char *id)
-{
-  File file = SD.open(path);
+// void RegisterID(const char *path, const char *id)
+// {
+//   File file = SD.open(path, FILE_WRITE);
+
+//   if(file)
+//   {
+//     file.println(id);
+//     file.close();
+//     Serial.printf("Registered ID: ", id);
+//   } 
+//   else
+//   {
+//     Serial.printf("Error opening file %s", path);
+//   }
+// }
+
+// bool VerifyIDs(const char *path, const char *id)
+// {
+//   File file = SD.open(path);
   
-  if(file)
-  {
-    Serial.printf("Searching ID");
+//   if(file)
+//   {
+//     Serial.printf("Searching ID");
     
-    while(file.available())
-    {
-      uint8_t readId[13];
-      file.read(readId, 13);
+//     while(file.available())
+//     {
+//       uint8_t readId[13];
+//       file.read(readId, 13);
       
-      for(int i = 0; i < 12; i++)
-      {
-        if(readId[i] != id[i])
-        {
-          break;
-        }
-        if(i == 11)
-        {
-          file.close();
-          return(true);
-        }
-      }
-    }
-    file.close();
-    return(false);
-  } 
-  else
-  {
-    Serial.println("Error opening file %s", path);
-  }
-}
+//       for(int i = 0; i < 12; i++)
+//       {
+//         if(readId[i] != id[i])
+//         {
+//           break;
+//         }
+//         if(i == 11)
+//         {
+//           file.close();
+//           return(true);
+//         }
+//       }
+//     }
+//     file.close();
+//     return(false);
+//   } 
+//   else
+//   {
+//     Serial.printf("Error opening file %s", path);
+//   }
+// }
 
 void setup()
 {
   Serial.begin(9600);
-  RFID.begin(9600);
+  delay(1000);
+  // RFID.begin(9600);
   
-  pinMode(rele, OUTPUT);
+  // pinMode(rele, OUTPUT);
 
-  //Inicia a comunicacao com o modulo SD
-  if (!SD.begin(CS))
+  // //Inicia a comunicacao com o modulo SD
+  // if (!SD.begin(CS))
+  // {
+  //   Serial.println("Fail to connect to MicroSD!\n");
+  //   return;
+  // }
+  // Serial.println("MicroSD Connected!\n");
+
+  Serial.print("Connecting to network: ");
+  Serial.println(ssid);
+  WiFi.disconnect(true);  //disconnect form wifi to set new wifi connection
+  WiFi.mode(WIFI_STA); //init wifi mode
+  WiFi.begin(ssid, WPA2_AUTH_PEAP, EAP_USERNAME, EAP_ID, EAP_PASSWORD); //without CERTIFICATE, NO ANONYMOUS IDENTITY
+  
+  while(WiFi.status() != WL_CONNECTED)
   {
-    Serial.println("Fail to connect to MicroSD!\n");
-    return;
+    delay(500);
+    Serial.print(F("."));
   }
-  Serial.println("MicroSD Connected!\n");
+  
+  Serial.println("");
+  Serial.println(F("WiFi is connected!"));
+  Serial.println(F("IP address set: "));
+  Serial.println(WiFi.localIP()); //print LAN IP
+
+  lcd.begin(16, 2); 
+  lcd.clear();    
+
+  lcd.print("Acesso negado");
 }
 
 void loop()
 {
-  if(!(RFID.available() > 0))
+  /*if(!(RFID.available() > 0))
   {
     delay(500);
+    Serial.println("Looking...");
     return;
   }
 
@@ -127,8 +161,9 @@ void loop()
     Serial.println("Access denied");
   }
 
-  while(RFID.available() > 0);
+  while(RFID.available() > 0)
   {
     RFID.read();
-  }
+    Serial.println("Lixo...");
+  }*/
 }
